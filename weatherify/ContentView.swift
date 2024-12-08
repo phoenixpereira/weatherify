@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  weatherify
 //
-//  Created by Phoenix Pereira on 8/12/2024.
+//  Created by Phoenix Pereira on 6/12/2024.
 //
 
 import SwiftUI
