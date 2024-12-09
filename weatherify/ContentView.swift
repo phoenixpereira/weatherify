@@ -1,20 +1,40 @@
-//
-//  ContentView.swift
-//  weatherify
-//
-//  Created by Phoenix Pereira on 8/12/2024.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     @StateObject private var weatherViewModel = WeatherViewModel()
     @State private var isNight = false
+    @State private var searchQuery = ""
     
     var body: some View {
         ZStack {
             BackgroundView(isNight: $isNight)
             VStack {
+                // Search Bar
+                TextField("Search City", text: $searchQuery)
+                    .padding()
+                    .frame(width: 360, height: 50)
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(10)
+                    .foregroundColor(.white)
+                    .onChange(of: searchQuery) { newQuery in
+                        weatherViewModel.filterCities(query: newQuery)
+                    }
+
+                // City Suggestions List
+                if !searchQuery.isEmpty {
+                    List(weatherViewModel.filteredCities, id: \.id) { city in
+                        Text(city.name)
+                            .onTapGesture {
+                                weatherViewModel.cityName = city.name
+                                weatherViewModel.fetchWeather()
+                                searchQuery = ""  // Clear the search query
+                            }
+                    }
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(10)
+                    .frame(width: 360, height: 250)
+                }
+                
                 CityTextView(cityName: weatherViewModel.cityName)
                 
                 if let weather = weatherViewModel.weather {
@@ -34,7 +54,6 @@ struct ContentView: View {
                         )
                     }
                 }
-
                 
                 Spacer()
                 
@@ -48,7 +67,7 @@ struct ContentView: View {
             }
         }
         .onAppear {
-            weatherViewModel.fetchWeather()
+            weatherViewModel.loadCities()
         }
     }
 }
@@ -62,10 +81,32 @@ struct ContentView: View {
 class WeatherViewModel: ObservableObject {
     @Published var weather: Weather?
     @Published var cityName: String = "Adelaide" // Default city
+    @Published var availableCities: [City] = []
+    @Published var filteredCities: [City] = []
     
     private let weatherService = WeatherService()
-    
     @Published var forecast: [WeatherDay] = []
+
+    private var allCities: [City] = []
+        
+    private let cityService = CityService()
+        
+    init() {
+        loadCities()
+    }
+        
+    func loadCities() {
+        allCities = cityService.loadCities()
+        filteredCities = allCities
+    }
+        
+    func filterCities(query: String) {
+        if query.isEmpty {
+            filteredCities = allCities
+        } else {
+            filteredCities = allCities.filter { $0.name.lowercased().contains(query.lowercased()) }
+        }
+    }
 
     func fetchWeather() {
         weatherService.fetchCoordinates(for: cityName) { [weak self] coordinates in
@@ -87,7 +128,6 @@ class WeatherViewModel: ObservableObject {
             }
         }
     }
-
 }
 
 // MARK: - Extensions
@@ -104,7 +144,6 @@ extension Weather {
         }
     }
 }
-
 
 struct WeatherDayView: View {
     var dayOfWeek: String

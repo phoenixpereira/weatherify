@@ -63,3 +63,10 @@ struct WeatherDay {
     }
 }
 
+struct City: Identifiable {
+    let id: String
+    let name: String
+    let iso2: String
+}
+
+

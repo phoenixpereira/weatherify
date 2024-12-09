@@ -145,3 +145,14 @@ class WeatherService {
         return dateFormatter.string(from: date).uppercased()
     }
 }
+
+// Models for decoding the GeoNames response
+struct GeoNamesResponse: Codable {
+    let geonames: [GeoName]
+}
+
+struct GeoName: Codable {
+    let name: String
+    let fcl: String
+    let fcode: String
+}
