@@ -1,10 +1,12 @@
 import SwiftUI
+import CoreLocation
+import CoreLocationUI
 
 struct ContentView: View {
     @StateObject private var weatherViewModel = WeatherViewModel()
     @State private var isNight = false
     @State private var searchQuery = ""
-    
+
     var body: some View {
         ZStack {
             BackgroundView(isNight: $isNight)
@@ -22,21 +24,24 @@ struct ContentView: View {
 
                 // City Suggestions List
                 if !searchQuery.isEmpty {
-                    List(weatherViewModel.filteredCities, id: \.id) { city in
-                        Text(city.name)
-                            .onTapGesture {
-                                weatherViewModel.cityName = city.name
-                                weatherViewModel.fetchWeather()
-                                searchQuery = ""  // Clear the search query
-                            }
+                    VStack(alignment: .leading, spacing: 0) {
+                        List(weatherViewModel.filteredCities, id: \.id) { city in
+                            Text(city.name)
+                                .onTapGesture {
+                                    weatherViewModel.cityName = city.name
+                                    weatherViewModel.fetchWeather()
+                                    searchQuery = ""  // Clear the search query
+                                }
+                        }
+                        .background(Color.white.opacity(0.2))
+                        .cornerRadius(10)
+                        .frame(width: 360)
                     }
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(10)
-                    .frame(width: 360, height: 250)
                 }
-                
+
                 CityTextView(cityName: weatherViewModel.cityName)
-                
+
+                // Weather status view
                 if let weather = weatherViewModel.weather {
                     WeatherStatusView(imageName: weather.conditionImageName(isNight: isNight), temperature: Int(weather.temperature))
                 } else {
@@ -44,7 +49,8 @@ struct ContentView: View {
                         .font(.system(size: 22, weight: .medium))
                         .foregroundColor(.white)
                 }
-                
+
+                // Forecast view
                 HStack(spacing: 20) {
                     ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
                         WeatherDayView(
@@ -54,20 +60,21 @@ struct ContentView: View {
                         )
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Button {
                     isNight.toggle()
                 } label: {
                     WeatherButton(title: "Change Day Time", textColor: .blue, backColor: .white)
                 }
-                
+
                 Spacer()
             }
         }
         .onAppear {
             weatherViewModel.loadCities()
+            weatherViewModel.startLocationUpdates() // Automatically get user's location
         }
     }
 }
@@ -78,28 +85,29 @@ struct ContentView: View {
 
 // MARK: - View Model
 
-class WeatherViewModel: ObservableObject {
+class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var weather: Weather?
     @Published var cityName: String = "Adelaide" // Default city
     @Published var availableCities: [City] = []
     @Published var filteredCities: [City] = []
-    
-    private let weatherService = WeatherService()
     @Published var forecast: [WeatherDay] = []
 
+    private let weatherService = WeatherService()
     private var allCities: [City] = []
-        
     private let cityService = CityService()
-        
-    init() {
+
+    private var locationManager: CLLocationManager?
+
+    override init() {
+        super.init()
         loadCities()
     }
-        
+
     func loadCities() {
         allCities = cityService.loadCities()
         filteredCities = allCities
     }
-        
+
     func filterCities(query: String) {
         if query.isEmpty {
             filteredCities = allCities
@@ -114,13 +122,13 @@ class WeatherViewModel: ObservableObject {
                 print("Failed to fetch coordinates.")
                 return
             }
-            
+
             self?.weatherService.fetchWeather(for: coordinates) { weather in
                 DispatchQueue.main.async {
                     self?.weather = weather
                 }
             }
-            
+
             self?.weatherService.fetchFiveDayForecast(for: coordinates) { forecast in
                 DispatchQueue.main.async {
                     self?.forecast = forecast ?? []
@@ -128,7 +136,48 @@ class WeatherViewModel: ObservableObject {
             }
         }
     }
+
+    func startLocationUpdates() {
+        locationManager = CLLocationManager()
+        locationManager?.delegate = self
+        locationManager?.requestWhenInUseAuthorization()
+        locationManager?.startUpdatingLocation()
+    }
+
+    @objc func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.first else { return }
+
+        // Stop updating to conserve battery once the location is fetched
+        locationManager?.stopUpdatingLocation()
+
+        // Fetch city and weather based on location
+        fetchCityForLocation(coordinate: location.coordinate)
+    }
+
+    @objc func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Failed to get location: \(error.localizedDescription)")
+    }
+
+    func fetchCityForLocation(coordinate: CLLocationCoordinate2D?) {
+        guard let coordinate = coordinate else { return }
+
+        let geocoder = CLGeocoder()
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+
+        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
+            if let error = error {
+                print("Error reverse geocoding: \(error)")
+                return
+            }
+
+            if let placemark = placemarks?.first {
+                self?.cityName = placemark.locality ?? "Unknown"
+                self?.fetchWeather()
+            }
+        }
+    }
 }
+
 
 // MARK: - Extensions
 
