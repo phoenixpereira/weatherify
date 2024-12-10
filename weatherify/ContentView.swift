@@ -1,5 +1,5 @@
 //
-//  ContentVidew.swift
+//  ContentView.swift
 //  weatherify
 //
 //  Created by Phoenix Pereira on 8/12/2024.
@@ -78,26 +78,25 @@ struct ContentView: View {
                     .padding(.vertical)
 
                     Spacer()
-
-                    Button {
-                        isNight.toggle()
-                    } label: {
-                        WeatherButton(
-                            title: "Change Day Time",
-                            textColor: .blue,
-                            backColor: .white
-                        )
-                        .frame(width: geometry.size.width * 0.6, height: 50)
-                    }
-
-                    Spacer()
                 }
             }
             .onAppear {
                 weatherViewModel.loadCities()
                 weatherViewModel.startLocationUpdates() // Automatically get user's location
             }
+            .onChange(of: weatherViewModel.cityTimezone) { _ in
+                determineDayOrNight()
+            }
         }
+    }
+
+    private func determineDayOrNight() {
+        guard let timezone = weatherViewModel.cityTimezone, let timeZone = TimeZone(identifier: timezone) else { return }
+        let currentTime = Date()
+        let localHour = Calendar.current.component(.hour, from: currentTime.toTimeZone(timeZone))
+
+        // Assume night is between 8 PM to 6 AM
+        isNight = localHour >= 20 || localHour < 6
     }
 }
 
@@ -106,6 +105,13 @@ struct ContentView: View {
 }
 
 // MARK: - Extensions
+
+extension Date {
+    func toTimeZone(_ timeZone: TimeZone) -> Date {
+        let secondsFromGMT = timeZone.secondsFromGMT(for: self)
+        return self.addingTimeInterval(TimeInterval(secondsFromGMT - TimeZone.current.secondsFromGMT(for: self)))
+    }
+}
 
 extension Weather {
     func conditionImageName(isNight: Bool) -> String {

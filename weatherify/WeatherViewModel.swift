@@ -12,6 +12,7 @@ import CoreLocationUI
 class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var weather: Weather?
     @Published var cityName: String = "Adelaide" // Default city
+    @Published var cityTimezone: String? // To hold the timezone of the city
     @Published var availableCities: [City] = []
     @Published var filteredCities: [City] = []
     @Published var forecast: [WeatherDay] = []
@@ -58,6 +59,26 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
                     self?.forecast = forecast ?? []
                 }
             }
+
+            self?.fetchTimezone(for: coordinates)
+        }
+    }
+
+    private func fetchTimezone(for coordinates: (Double, Double)) {
+        let location = CLLocation(latitude: coordinates.0, longitude: coordinates.1)
+        let geocoder = CLGeocoder()
+
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            if let error = error {
+                print("Error fetching timezone: \(error)")
+                return
+            }
+
+            if let placemark = placemarks?.first {
+                DispatchQueue.main.async {
+                    self?.cityTimezone = placemark.timeZone?.identifier
+                }
+            }
         }
     }
 
@@ -71,32 +92,30 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @objc func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.first else { return }
 
-        // Stop updating to conserve battery once the location is fetched
         locationManager?.stopUpdatingLocation()
-
-        // Fetch city and weather based on location
-        fetchCityForLocation(coordinate: location.coordinate)
+        fetchCityForLocation(coordinate: (location.coordinate.latitude, location.coordinate.longitude))
     }
 
     @objc func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Failed to get location: \(error.localizedDescription)")
     }
 
-    func fetchCityForLocation(coordinate: CLLocationCoordinate2D?) {
-        guard let coordinate = coordinate else { return }
-
+    func fetchCityForLocation(coordinate: (Double, Double)) {
+        let location = CLLocation(latitude: coordinate.0, longitude: coordinate.1)
         let geocoder = CLGeocoder()
-        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
 
-        geocoder.reverseGeocodeLocation(location) { [weak self] (placemarks, error) in
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, error in
             if let error = error {
                 print("Error reverse geocoding: \(error)")
                 return
             }
 
             if let placemark = placemarks?.first {
-                self?.cityName = placemark.locality ?? "Unknown"
-                self?.fetchWeather()
+                DispatchQueue.main.async {
+                    self?.cityName = placemark.locality ?? "Unknown"
+                    self?.cityTimezone = placemark.timeZone?.identifier
+                    self?.fetchWeather()
+                }
             }
         }
     }

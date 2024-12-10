@@ -12,29 +12,28 @@ struct BackgroundView: View {
     @Binding var isNight: Bool
 
     var body: some View {
-        let gradientColors = gradientColorsForCondition(weatherCondition: weatherCondition, isNight: isNight)
         LinearGradient(
-            gradient: Gradient(colors: gradientColors),
+            gradient: Gradient(colors: backgroundColors(for: weatherCondition)),
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
         .ignoresSafeArea()
     }
 
-    private func gradientColorsForCondition(weatherCondition: String, isNight: Bool) -> [Color] {
-        switch weatherCondition {
+    func backgroundColors(for condition: String) -> [Color] {
+        switch condition {
         case "Clear sky":
-            return isNight ? [.black, .blue] : [.yellow, .blue]
+            return isNight ? [Color.black, Color.gray] : [Color.blue, Color.orange]
         case "Partly cloudy":
-            return isNight ? [.black, .gray] : [.gray, .blue]
+            return isNight ? [Color.gray, Color.black] : [Color.gray, Color.blue]
         case "Rainy":
-            return isNight ? [.black, .gray] : [.gray, .blue]
+            return [Color.gray, Color.blue.opacity(0.7)]
         case "Snowy":
-            return isNight ? [.black, .gray] : [.gray, .white]
+            return [Color.white, Color.blue.opacity(0.5)]
         case "Thunderstorm":
-            return isNight ? [.black, .purple] : [.gray, .purple]
+            return [Color.black, Color.purple]
         default:
-            return isNight ? [.black, .gray] : [.gray, .blue]
+            return isNight ? [Color.black, Color.gray] : [Color.blue, Color.purple]
         }
     }
 }
