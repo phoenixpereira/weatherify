@@ -8,75 +8,90 @@ struct ContentView: View {
     @State private var searchQuery = ""
 
     var body: some View {
-        ZStack {
-            BackgroundView(isNight: $isNight)
-            VStack {
-                // Search Bar
-                TextField("Search City", text: $searchQuery)
-                    .padding()
-                    .frame(width: 360, height: 50)
-                    .background(Color.white.opacity(0.2))
-                    .cornerRadius(10)
-                    .foregroundColor(.white)
-                    .onChange(of: searchQuery) { newQuery in
-                        weatherViewModel.filterCities(query: newQuery)
-                    }
+            GeometryReader { geometry in
+                ZStack {
+                    BackgroundView(isNight: $isNight)
+                    VStack {
+                        // Search Bar
+                        TextField("Search City", text: $searchQuery)
+                            .padding()
+                            .frame(width: geometry.size.width * 0.9, height: 50)
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(10)
+                            .foregroundColor(.white)
+                            .onChange(of: searchQuery) { newQuery in
+                                weatherViewModel.filterCities(query: newQuery)
+                            }
 
-                // City Suggestions List
-                if !searchQuery.isEmpty {
-                    VStack(alignment: .leading, spacing: 0) {
-                        List(weatherViewModel.filteredCities, id: \.id) { city in
-                            Text(city.name)
-                                .onTapGesture {
-                                    weatherViewModel.cityName = city.name
-                                    weatherViewModel.fetchWeather()
-                                    searchQuery = ""  // Clear the search query
+                        // City Suggestions List
+                        if !searchQuery.isEmpty {
+                            VStack(alignment: .leading, spacing: 0) {
+                                List(weatherViewModel.filteredCities, id: \.id) { city in
+                                    Text(city.name)
+                                        .onTapGesture {
+                                            weatherViewModel.cityName = city.name
+                                            weatherViewModel.fetchWeather()
+                                            searchQuery = ""  // Clear the search query
+                                        }
                                 }
+                                .background(Color.white.opacity(0.2))
+                                .cornerRadius(10)
+                                .frame(width: geometry.size.width * 0.9, height: 250)
+                            }
                         }
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(10)
-                        .frame(width: 360)
+
+                        CityTextView(cityName: weatherViewModel.cityName)
+
+                        // Weather status view
+                        if let weather = weatherViewModel.weather {
+                            WeatherStatusView(
+                                imageName: weather.conditionImageName(isNight: isNight),
+                                temperature: Int(weather.temperature),
+                                geometry: geometry
+                            )
+                        } else {
+                            Text("Loading weather...")
+                                .font(.system(size: 22, weight: .medium))
+                                .foregroundColor(.white)
+                        }
+
+                        // Forecast view
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 1) {
+                                ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
+                                    WeatherDayView(
+                                        dayOfWeek: weatherDay.dayOfWeek,
+                                        imageName: weatherDay.conditionImageName(),
+                                        temperature: Int(weatherDay.maxTemperature)
+                                    )
+                                    .frame(width: geometry.size.width * 0.2)
+                                }
+                            }
+                        }
+                        .padding(.vertical)
+
+                        Spacer()
+
+                        Button {
+                            isNight.toggle()
+                        } label: {
+                            WeatherButton(
+                                title: "Change Day Time",
+                                textColor: .blue,
+                                backColor: .white
+                            )
+                            .frame(width: geometry.size.width * 0.6, height: 50)
+                        }
+
+                        Spacer()
                     }
                 }
-
-                CityTextView(cityName: weatherViewModel.cityName)
-
-                // Weather status view
-                if let weather = weatherViewModel.weather {
-                    WeatherStatusView(imageName: weather.conditionImageName(isNight: isNight), temperature: Int(weather.temperature))
-                } else {
-                    Text("Loading weather...")
-                        .font(.system(size: 22, weight: .medium))
-                        .foregroundColor(.white)
+                .onAppear {
+                    weatherViewModel.loadCities()
+                    weatherViewModel.startLocationUpdates() // Automatically get user's location
                 }
-
-                // Forecast view
-                HStack(spacing: 20) {
-                    ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
-                        WeatherDayView(
-                            dayOfWeek: weatherDay.dayOfWeek,
-                            imageName: weatherDay.conditionImageName(),
-                            temperature: Int(weatherDay.maxTemperature)
-                        )
-                    }
-                }
-
-                Spacer()
-
-                Button {
-                    isNight.toggle()
-                } label: {
-                    WeatherButton(title: "Change Day Time", textColor: .blue, backColor: .white)
-                }
-
-                Spacer()
             }
         }
-        .onAppear {
-            weatherViewModel.loadCities()
-            weatherViewModel.startLocationUpdates() // Automatically get user's location
-        }
-    }
 }
 
 #Preview {
@@ -236,17 +251,19 @@ struct CityTextView: View {
 struct WeatherStatusView: View {
     var imageName: String
     var temperature: Int
+    var geometry: GeometryProxy
+
     var body: some View {
         VStack {
             Image(systemName: imageName)
                 .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 180, height: 180)
+                .frame(width: geometry.size.width * 0.5, height: geometry.size.width * 0.5)
             Text("\(temperature)°")
-                .font(.system(size: 70, weight: .medium))
+                .font(.system(size: geometry.size.width * 0.2, weight: .medium))
                 .foregroundColor(.white)
         }
-        .padding(.bottom, 40)
+        .padding(.bottom, geometry.size.height * 0.05)
     }
 }
