@@ -23,17 +23,17 @@ struct BackgroundView: View {
     func backgroundColors(for condition: String) -> [Color] {
         switch condition {
         case "Clear sky":
-            return isNight ? [Color.black, Color.gray] : [Color.blue, Color.orange]
+            return isNight ? [Color.gray.opacity(0.5), Color.black] : [Color.orange, Color.blue]
         case "Partly cloudy":
-            return isNight ? [Color.gray, Color.black] : [Color.gray, Color.blue]
+            return isNight ? [Color.blue.opacity(0.75), Color.black] : [Color.blue.opacity(0.75), Color.gray]
         case "Rainy":
-            return [Color.gray, Color.blue.opacity(0.7)]
+            return isNight ? [Color.gray, Color.black] : [Color.gray, Color.blue]
         case "Snowy":
-            return [Color.white, Color.blue.opacity(0.5)]
+            return isNight ? [Color.white, Color.gray] : [Color.gray.opacity(0.5), Color.gray]
         case "Thunderstorm":
-            return [Color.black, Color.purple]
+            return isNight ? [Color.purple, Color.black] : [Color.purple, Color.gray]
         default:
-            return isNight ? [Color.black, Color.gray] : [Color.blue, Color.purple]
+            return isNight ? [Color.gray, Color.black] : [Color.orange, Color.blue]
         }
     }
 }
