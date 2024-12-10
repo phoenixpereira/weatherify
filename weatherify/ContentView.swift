@@ -16,39 +16,16 @@ struct ContentView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
+            ZStack(alignment: .top) {
+                // Background
                 BackgroundView(weatherCondition: weatherViewModel.weather?.condition ?? "Clear sky", isNight: $isNight)
+
+                // Main content
                 VStack {
-                    // Search Bar
-                    TextField("Search City", text: $searchQuery)
-                        .padding()
-                        .frame(width: geometry.size.width * 0.9, height: 50)
-                        .background(Color.white.opacity(0.2))
-                        .cornerRadius(10)
-                        .foregroundColor(.white)
-                        .onChange(of: searchQuery) { newQuery in
-                            weatherViewModel.filterCities(query: newQuery)
-                        }
-
-                    // City Suggestions List
-                    if !searchQuery.isEmpty {
-                        VStack(alignment: .leading, spacing: 0) {
-                            List(weatherViewModel.filteredCities, id: \.id) { city in
-                                Text(city.name)
-                                    .onTapGesture {
-                                        weatherViewModel.cityName = city.name
-                                        weatherViewModel.fetchWeather()
-                                        searchQuery = ""  // Clear the search query
-                                    }
-                            }
-                            .background(Color.white.opacity(0.2))
-                            .cornerRadius(10)
-                            .frame(width: geometry.size.width * 0.9, height: 250)
-                        }
-                    }
-
+                    Spacer().frame(height: 60) // Top padding for search bar
+                    
                     CityTextView(cityName: weatherViewModel.cityName)
-
+                    
                     // Weather status view
                     if let weather = weatherViewModel.weather {
                         WeatherStatusView(
@@ -79,10 +56,59 @@ struct ContentView: View {
 
                     Spacer()
                 }
+
+                // Search bar and dropdown
+                VStack {
+                    ZStack(alignment: .top) {
+                        HStack {
+                            if !searchQuery.isEmpty {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 10)
+                            } else {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.gray)
+                                    .padding(.leading, 10)
+                            }
+
+                            TextField("Search City", text: $searchQuery)
+                                .padding()
+                                .frame(height: 50)
+                                .foregroundColor(.white)
+                                .onChange(of: searchQuery) { newQuery in
+                                    weatherViewModel.filterCities(query: newQuery)
+                                }
+                        }
+                        .frame(width: geometry.size.width * 0.9)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(10)
+
+                        // Dropdown suggestions
+                        if !searchQuery.isEmpty {
+                            VStack(alignment: .leading, spacing: 0) {
+                                List(weatherViewModel.filteredCities, id: \.id) { city in
+                                    Text(city.name)
+                                        .onTapGesture {
+                                            weatherViewModel.cityName = city.name
+                                            weatherViewModel.fetchWeather()
+                                            searchQuery = ""  // Clear the search query
+                                        }
+                                }
+                                .scrollContentBackground(.hidden)
+                                .cornerRadius(10)
+                                .frame(width: geometry.size.width * 0.9, height: 250)
+                                .shadow(radius: 5)
+                            }
+                            .padding(.top, 60) // Dropdown overlaps below search bar
+                        }
+                    }
+                    .frame(width: geometry.size.width)
+                    .padding(.top, 10) // Adjust the position of the search bar
+                }
             }
             .onAppear {
                 weatherViewModel.loadCities()
-                weatherViewModel.startLocationUpdates() // Automatically get user's location
+                weatherViewModel.startLocationUpdates()
             }
             .onChange(of: weatherViewModel.cityTimezone) { _ in
                 determineDayOrNight()
@@ -99,6 +125,7 @@ struct ContentView: View {
         isNight = localHour >= 20 || localHour < 6
     }
 }
+
 
 #Preview {
     ContentView()
