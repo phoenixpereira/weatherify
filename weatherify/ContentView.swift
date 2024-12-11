@@ -17,7 +17,6 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Background
                 BackgroundView(weatherCondition: weatherViewModel.weather?.condition ?? "Clear sky", isNight: $isNight)
 
                 // Main content
@@ -28,7 +27,7 @@ struct ContentView: View {
                     
                     // Weather status view
                     if let weather = weatherViewModel.weather {
-                        WeatherStatusView(
+                        WeatherDayView(
                             imageName: weather.conditionImageName(isNight: isNight),
                             temperature: Int(weather.temperature),
                             minTemperature: Int(weather.minTemperature),
@@ -46,7 +45,7 @@ struct ContentView: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: 1) {
                             ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
-                                WeatherDayView(
+                                WeatherWeekView(
                                     dayOfWeek: weatherDay.dayOfWeek,
                                     imageName: weatherDay.conditionImageName(),
                                     temperature: Int(weatherDay.maxTemperature)
@@ -61,61 +60,7 @@ struct ContentView: View {
                     Spacer()
                 }
 
-                // Search bar and dropdown
-                VStack {
-                    ZStack(alignment: .top) {
-                        HStack {
-                            if !searchQuery.isEmpty {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundColor(.black)
-                                    .padding(.leading, 10)
-                            } else {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundColor(.gray)
-                                    .padding(.leading, 10)
-                            }
-
-                            TextField("Search City", text: $searchQuery)
-                                .padding()
-                                .frame(height: 50)
-                                .foregroundColor(.primary)
-                                .onChange(of: searchQuery) { newQuery in
-                                    weatherViewModel.filterCities(query: newQuery)
-                                }
-                        }
-                        .frame(width: geometry.size.width * 0.9)
-                        .background(.thinMaterial)
-                        .cornerRadius(10)
-
-                        // Dropdown suggestions
-                        if !searchQuery.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                List(weatherViewModel.filteredCities, id: \.id) { city in
-                                    HStack {
-                                        Text(city.name)
-                                            .foregroundColor(.primary)
-                                            .onTapGesture {
-                                                weatherViewModel.cityName = city.name
-                                                weatherViewModel.fetchWeather()
-                                                searchQuery = "" // Clear the search query
-                                            }
-                                    }
-
-                                    .listRowBackground(Color.clear)
-                                }
-                                .listStyle(.plain)
-                                .scrollContentBackground(.hidden)
-                                .background(.thinMaterial)
-                                .cornerRadius(10)
-                                .frame(width: geometry.size.width * 0.9, height: 250)
-                            }
-                            .padding(.top, 60)
-                        }
-
-                    }
-                    .frame(width: geometry.size.width)
-                    .padding(.top, 10)
-                }
+                Searchbox(searchQuery: searchQuery, geometry: geometry, weatherViewModel: weatherViewModel)
             }
             .onAppear {
                 weatherViewModel.loadCities()
@@ -164,32 +109,6 @@ extension Weather {
     }
 }
 
-struct WeatherDayView: View {
-    var dayOfWeek: String
-    var imageName: String
-    var temperature: Int
-    
-    var body: some View {
-        HStack {
-            Text(dayOfWeek)
-                .font(.system(size: 16, weight: .medium, design: .default))
-                .foregroundStyle(.white)
-            
-            Image(systemName: imageName)
-                .renderingMode(.original)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(height: 40)
-            
-            Text("\(temperature)°")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(.white)
-        }
-        .padding(16)
-    }
-}
-
-
 struct CityTextView: View {
     var cityName: String
     var body: some View {
@@ -199,49 +118,3 @@ struct CityTextView: View {
             .padding()
     }
 }
-
-struct WeatherStatusView: View {
-    var imageName: String
-    var temperature: Int
-    var minTemperature: Int
-    var maxTemperature: Int
-    var condition: String
-    var geometry: GeometryProxy
-
-    var body: some View {
-        HStack(spacing: geometry.size.height * 0.05) {
-            Image(systemName: imageName)
-                .renderingMode(.original)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: geometry.size.width * 0.25, height: geometry.size.width * 0.25)
-                
-            VStack(spacing: 5) {
-                Text("\(temperature)°")
-                    .font(.system(size: geometry.size.width * 0.1, weight: .medium))
-                    .foregroundColor(.white)
-                
-                Text(condition)
-                    .font(.system(size: geometry.size.width * 0.05))
-                    .foregroundColor(.white)
-                    .padding(.top, 5)
-                
-                HStack(spacing: 5) {
-                    VStack {
-                        Text("L: \(minTemperature)°")
-                            .font(.system(size: geometry.size.width * 0.05))
-                            .foregroundColor(.white)
-                    }
-                    
-                    VStack {
-                        Text("H: \(maxTemperature)°")
-                            .font(.system(size: geometry.size.width * 0.05))
-                            .foregroundColor(.white)
-                    }
-                }
-            }
-        }
-        .padding(.bottom, geometry.size.height * 0.05)
-    }
-}
-
