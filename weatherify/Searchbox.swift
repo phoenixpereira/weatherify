@@ -39,7 +39,7 @@ struct Searchbox: View {
                 }
                 .frame(width: geometry.size.width * 0.9)
                 .background(.thinMaterial)
-                .cornerRadius(10)
+                .cornerRadius(24)
                 
                 // Dropdown suggestions
                 if !searchQuery.isEmpty {
@@ -60,7 +60,7 @@ struct Searchbox: View {
                         .listStyle(.plain)
                         .scrollContentBackground(.hidden)
                         .background(.thinMaterial)
-                        .cornerRadius(10)
+                        .cornerRadius(24)
                         .frame(width: geometry.size.width * 0.9, height: 250)
                     }
                     .padding(.top, 60)
