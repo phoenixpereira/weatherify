@@ -63,7 +63,7 @@ struct ContentView: View {
                         HStack {
                             if !searchQuery.isEmpty {
                                 Image(systemName: "magnifyingglass")
-                                    .foregroundColor(.white)
+                                    .foregroundColor(.black)
                                     .padding(.leading, 10)
                             } else {
                                 Image(systemName: "magnifyingglass")
@@ -74,36 +74,43 @@ struct ContentView: View {
                             TextField("Search City", text: $searchQuery)
                                 .padding()
                                 .frame(height: 50)
-                                .foregroundColor(.white)
+                                .foregroundColor(.primary)
                                 .onChange(of: searchQuery) { newQuery in
                                     weatherViewModel.filterCities(query: newQuery)
                                 }
                         }
                         .frame(width: geometry.size.width * 0.9)
-                        .background(.ultraThinMaterial)
+                        .background(.thinMaterial)
                         .cornerRadius(10)
 
                         // Dropdown suggestions
                         if !searchQuery.isEmpty {
                             VStack(alignment: .leading, spacing: 0) {
                                 List(weatherViewModel.filteredCities, id: \.id) { city in
-                                    Text(city.name)
-                                        .onTapGesture {
-                                            weatherViewModel.cityName = city.name
-                                            weatherViewModel.fetchWeather()
-                                            searchQuery = ""  // Clear the search query
-                                        }
+                                    HStack {
+                                        Text(city.name)
+                                            .foregroundColor(.primary)
+                                            .onTapGesture {
+                                                weatherViewModel.cityName = city.name
+                                                weatherViewModel.fetchWeather()
+                                                searchQuery = "" // Clear the search query
+                                            }
+                                    }
+
+                                    .listRowBackground(Color.clear)
                                 }
+                                .listStyle(.plain)
                                 .scrollContentBackground(.hidden)
+                                .background(.thinMaterial)
                                 .cornerRadius(10)
                                 .frame(width: geometry.size.width * 0.9, height: 250)
-                                .shadow(radius: 5)
                             }
-                            .padding(.top, 60) // Dropdown overlaps below search bar
+                            .padding(.top, 60)
                         }
+
                     }
                     .frame(width: geometry.size.width)
-                    .padding(.top, 10) // Adjust the position of the search bar
+                    .padding(.top, 10)
                 }
             }
             .onAppear {
