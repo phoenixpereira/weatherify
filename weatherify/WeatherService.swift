@@ -120,7 +120,7 @@ class WeatherService {
             
             do {
                 let decodedResponse = try JSONDecoder().decode(DailyForecastResponse.self, from: data)
-                let weatherDays = zip(decodedResponse.daily.time.prefix(5), decodedResponse.daily.weathercode).enumerated().map { index, element in
+                let weatherDays = zip(decodedResponse.daily.time, decodedResponse.daily.weathercode).enumerated().map { index, element in
                     let (date, code) = element
                     return WeatherDay(
                         dayOfWeek: self.dayOfWeek(from: date),

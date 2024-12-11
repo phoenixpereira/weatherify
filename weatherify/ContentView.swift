@@ -40,19 +40,20 @@ struct ContentView: View {
                     }
 
                     // Forecast view
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 1) {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 1) {
                             ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
                                 WeatherDayView(
                                     dayOfWeek: weatherDay.dayOfWeek,
                                     imageName: weatherDay.conditionImageName(),
                                     temperature: Int(weatherDay.maxTemperature)
                                 )
-                                .frame(width: geometry.size.width * 0.2)
                             }
                         }
+                        .frame(width: geometry.size.width * 0.9)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
                     }
-                    .padding(.vertical)
 
                     Spacer()
                 }
@@ -166,19 +167,22 @@ struct WeatherDayView: View {
     var temperature: Int
     
     var body: some View {
-        VStack{
+        HStack {
             Text(dayOfWeek)
                 .font(.system(size: 16, weight: .medium, design: .default))
                 .foregroundStyle(.white)
+            
             Image(systemName: imageName)
                 .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 40, height: 40)
+            
             Text("\(temperature)°")
                 .font(.system(size: 28, weight: .medium))
                 .foregroundStyle(.white)
         }
+        .padding(16)
     }
 }
 
