@@ -8,8 +8,10 @@
 import Foundation
 
 struct Weather {
-    let temperature: Double
-    let condition: String
+    var temperature: Int
+    var minTemperature: Int
+    var maxTemperature: Int
+    var condition: String
 }
 
 struct OpenMeteoResponse: Codable {
@@ -18,8 +20,15 @@ struct OpenMeteoResponse: Codable {
         let weathercode: Int
     }
     
+    struct DailyWeather: Codable {
+        let temperature_2m_max: [Double]
+        let temperature_2m_min: [Double]
+    }
+
     let current_weather: CurrentWeather
+    let daily: DailyWeather
 }
+
 
 struct GeocodingResponse: Codable {
     struct Result: Codable {

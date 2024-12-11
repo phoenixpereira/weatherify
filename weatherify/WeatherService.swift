@@ -46,7 +46,7 @@ class WeatherService {
 
     func fetchWeather(for coordinates: (Double, Double), completion: @escaping (Weather?) -> Void) {
         let (lat, lon) = coordinates
-        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current_weather=true"
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current_weather=true&daily=temperature_2m_max,temperature_2m_min"
         
         guard let url = URL(string: urlString) else {
             print("Invalid URL for weather API")
@@ -69,8 +69,14 @@ class WeatherService {
             
             do {
                 let decodedResponse = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
+                
+                let minTemperature = decodedResponse.daily.temperature_2m_min.first ?? 0.0
+                let maxTemperature = decodedResponse.daily.temperature_2m_max.first ?? 0.0
+                
                 let weather = Weather(
-                    temperature: decodedResponse.current_weather.temperature,
+                    temperature: Int(decodedResponse.current_weather.temperature),
+                    minTemperature: Int(minTemperature),
+                    maxTemperature: Int(maxTemperature),
                     condition: self.mapCondition(decodedResponse.current_weather.weathercode)
                 )
                 completion(weather)
