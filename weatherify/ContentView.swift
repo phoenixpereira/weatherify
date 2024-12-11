@@ -176,7 +176,7 @@ struct WeatherDayView: View {
                 .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 40, height: 40)
+                .frame(height: 40)
             
             Text("\(temperature)°")
                 .font(.system(size: 28, weight: .medium))
