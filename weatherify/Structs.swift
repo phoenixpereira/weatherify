@@ -77,3 +77,32 @@ struct City: Identifiable {
     let name: String
     let iso2: String
 }
+
+struct HourlyWeather {
+    let time: String
+    let weatherCode: Int
+    let temperature: Double
+    
+    func conditionImageName() -> String {
+        switch weatherCode {
+        case 0: return "sun.max.fill"
+        case 1, 2, 3: return "cloud.sun.fill"
+        case 45, 48: return "cloud.fog.fill"
+        case 51, 53, 55: return "cloud.drizzle.fill"
+        case 61, 63, 65: return "cloud.rain.fill"
+        case 71, 73, 75: return "cloud.snow.fill"
+        case 80, 81, 82: return "cloud.heavyrain.fill"
+        case 95, 96, 99: return "cloud.bolt.fill"
+        default: return "questionmark"
+        }
+    }
+}
+
+struct HourlyForecastResponse: Codable {
+    struct Hourly: Codable {
+        let time: [String]
+        let temperature_2m: [Double]
+        let weathercode: [Int]
+    }
+    let hourly: Hourly
+}

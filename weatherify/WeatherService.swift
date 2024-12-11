@@ -142,6 +142,53 @@ class WeatherService {
             }
         }.resume()
     }
+    
+    func fetchHourlyWeather(for coordinates: (Double, Double), completion: @escaping ([HourlyWeather]?) -> Void) {
+        let (lat, lon) = coordinates
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&hourly=temperature_2m,weathercode&timezone=auto"
+        
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL for hourly weather API")
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error fetching hourly weather: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received for hourly weather.")
+                completion(nil)
+                return
+            }
+            
+            do {
+                let decodedResponse = try JSONDecoder().decode(HourlyForecastResponse.self, from: data)
+                
+                let hourlyWeather = zip(decodedResponse.hourly.time, decodedResponse.hourly.weathercode)
+                    .enumerated()
+                    .prefix(24) // Limit to 24 hours
+                    .map { index, element in
+                        let (time, code) = element
+                        return HourlyWeather(
+                            time: self.hourOfDay(from: time),
+                            weatherCode: code,
+                            temperature: decodedResponse.hourly.temperature_2m[index]
+                        )
+                    }
+                
+                completion(hourlyWeather)
+            } catch {
+                print("Error decoding hourly weather response: \(error.localizedDescription)")
+                completion(nil)
+            }
+        }.resume()
+    }
+
 
     private func dayOfWeek(from date: String) -> String {
         let dateFormatter = DateFormatter()
@@ -149,6 +196,14 @@ class WeatherService {
         guard let date = dateFormatter.date(from: date) else { return "Unknown" }
         dateFormatter.dateFormat = "EEE"
         return dateFormatter.string(from: date).uppercased()
+    }
+    
+    private func hourOfDay(from time: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
+        guard let date = formatter.date(from: time) else { return time }
+        formatter.dateFormat = "h a"
+        return formatter.string(from: date)
     }
 }
 

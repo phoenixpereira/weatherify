@@ -21,7 +21,7 @@ struct ContentView: View {
 
                 // Main content
                 VStack {
-                    Spacer().frame(height: 60) // Top padding for search bar
+                    Spacer().frame(height: 60)
                     
                     CityTextView(cityName: weatherViewModel.cityName)
                     
@@ -41,22 +41,8 @@ struct ContentView: View {
                             .foregroundColor(.white)
                     }
 
-                    // Forecast view
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 1) {
-                            ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
-                                WeatherWeekView(
-                                    dayOfWeek: weatherDay.dayOfWeek,
-                                    imageName: weatherDay.conditionImageName(),
-                                    maxTemperature: Int(weatherDay.maxTemperature),
-                                    minTemperature: Int(weatherDay.minTemperature)
-                                )
-                            }
-                        }
-                        .frame(width: geometry.size.width * 0.9)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(12)
-                    }
+                    DetailedForecast(geometry: geometry, weatherViewModel: weatherViewModel)
+
 
                     Spacer()
                 }
@@ -117,5 +103,62 @@ struct CityTextView: View {
             .font(.system(size: 32, weight: .medium, design: .default))
             .foregroundColor(.white)
             .padding()
+    }
+}
+
+struct DetailedForecast: View {
+    var geometry: GeometryProxy
+    var weatherViewModel: WeatherViewModel
+    
+    var body: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 20) {
+                Spacer()
+                
+                // Hourly Forecast
+                VStack {
+                    Text("Hourly Forecast")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundColor(.white)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(weatherViewModel.hourlyForecast, id: \.time) { weatherHour in
+                                WeatherHourView(
+                                    time: weatherHour.time,
+                                    imageName: weatherHour.conditionImageName(),
+                                    temperature: Int(weatherHour.temperature)
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 10)
+                
+                // Weekly Forecast
+                VStack {
+                    Text("Weekly Forecast")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundColor(.white)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(weatherViewModel.forecast, id: \.dayOfWeek) { weatherDay in
+                                WeatherWeekView(
+                                    dayOfWeek: weatherDay.dayOfWeek,
+                                    imageName: weatherDay.conditionImageName(),
+                                    maxTemperature: Int(weatherDay.maxTemperature),
+                                    minTemperature: Int(weatherDay.minTemperature)
+                                )
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 10)
+            }
+        }
+        .frame(height: geometry.size.height * 0.75)
+        .background(.ultraThinMaterial)
+        .cornerRadius(32)
     }
 }

@@ -16,6 +16,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var availableCities: [City] = []
     @Published var filteredCities: [City] = []
     @Published var forecast: [WeatherDay] = []
+    @Published var hourlyForecast: [HourlyWeather] = []
 
     private let weatherService = WeatherService()
     private var allCities: [City] = []
@@ -57,6 +58,12 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             self?.weatherService.fetchFiveDayForecast(for: coordinates) { forecast in
                 DispatchQueue.main.async {
                     self?.forecast = forecast ?? []
+                }
+            }
+            
+            self?.weatherService.fetchHourlyWeather(for: coordinates) { hourlyForecast in
+                DispatchQueue.main.async {
+                    self?.hourlyForecast = hourlyForecast ?? []
                 }
             }
 

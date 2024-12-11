@@ -17,7 +17,7 @@ struct WeatherWeekView: View {
     var minTemperature: Int
     
     var body: some View {
-        HStack {
+        VStack {
             Text(dayOfWeek)
                 .font(.system(size: 16, weight: .medium, design: .default))
                 .foregroundStyle(.white)
@@ -38,6 +38,8 @@ struct WeatherWeekView: View {
                     .foregroundStyle(.white)
             }
         }
-        .padding(16)
+        .frame(width: 80, height: 160)
+        .background(.ultraThinMaterial)
+        .cornerRadius(24)
     }
 }
