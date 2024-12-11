@@ -77,5 +77,3 @@ struct City: Identifiable {
     let name: String
     let iso2: String
 }
-
-

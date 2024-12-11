@@ -48,7 +48,8 @@ struct ContentView: View {
                                 WeatherWeekView(
                                     dayOfWeek: weatherDay.dayOfWeek,
                                     imageName: weatherDay.conditionImageName(),
-                                    temperature: Int(weatherDay.maxTemperature)
+                                    maxTemperature: Int(weatherDay.maxTemperature),
+                                    minTemperature: Int(weatherDay.minTemperature)
                                 )
                             }
                         }

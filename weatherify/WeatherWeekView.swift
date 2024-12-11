@@ -13,7 +13,8 @@ import CoreLocationUI
 struct WeatherWeekView: View {
     var dayOfWeek: String
     var imageName: String
-    var temperature: Int
+    var maxTemperature: Int
+    var minTemperature: Int
     
     var body: some View {
         HStack {
@@ -27,9 +28,15 @@ struct WeatherWeekView: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(height: 40)
             
-            Text("\(temperature)°")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(.white)
+            VStack {
+                Text("\(maxTemperature)°")
+                    .font(.system(size: 28, weight: .medium))
+                    .foregroundStyle(.white)
+                
+                Text("\(minTemperature)°")
+                    .font(.system(size: 16, weight: .light))
+                    .foregroundStyle(.white)
+            }
         }
         .padding(16)
     }
