@@ -49,13 +49,13 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
                 return
             }
 
-            self?.weatherService.fetchWeather(for: coordinates) { weather in
+            self?.weatherService.fetchDailyWeather(for: coordinates) { weather in
                 DispatchQueue.main.async {
                     self?.weather = weather
                 }
             }
 
-            self?.weatherService.fetchFiveDayForecast(for: coordinates) { forecast in
+            self?.weatherService.fetchWeeklyForecast(for: coordinates) { forecast in
                 DispatchQueue.main.async {
                     self?.forecast = forecast ?? []
                 }

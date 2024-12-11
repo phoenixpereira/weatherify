@@ -123,11 +123,12 @@ struct DetailedForecast: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            ForEach(weatherViewModel.hourlyForecast, id: \.time) { weatherHour in
+                            ForEach(weatherViewModel.hourlyForecast, id: \.time) { hourlyWeather in
                                 WeatherHourView(
-                                    time: weatherHour.time,
-                                    imageName: weatherHour.conditionImageName(),
-                                    temperature: Int(weatherHour.temperature)
+                                    time: hourlyWeather.time,
+                                    imageName: hourlyWeather.conditionImageName(),
+                                    temperature: Int(hourlyWeather.temperature),
+                                    precipitationChance: hourlyWeather.precipitationChance
                                 )
                             }
                         }
@@ -148,7 +149,8 @@ struct DetailedForecast: View {
                                     dayOfWeek: weatherDay.dayOfWeek,
                                     imageName: weatherDay.conditionImageName(),
                                     maxTemperature: Int(weatherDay.maxTemperature),
-                                    minTemperature: Int(weatherDay.minTemperature)
+                                    minTemperature: Int(weatherDay.minTemperature),
+                                    precipitationChance: Int(weatherDay.precipitationChance)
                                 )
                             }
                         }

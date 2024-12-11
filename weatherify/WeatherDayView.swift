@@ -7,8 +7,6 @@
 
 
 import SwiftUI
-import CoreLocation
-import CoreLocationUI
 
 struct WeatherDayView: View {
     var imageName: String

@@ -45,9 +45,9 @@ struct DailyForecastResponse: Codable {
         let time: [String]
         let temperature_2m_max: [Double]
         let temperature_2m_min: [Double]
+        let precipitation_probability_max: [Int]
         let weathercode: [Int]
     }
-    
     let daily: Daily
 }
 
@@ -56,6 +56,7 @@ struct WeatherDay {
     let weatherCode: Int
     let maxTemperature: Double
     let minTemperature: Double
+    let precipitationChance: Int
     
     func conditionImageName() -> String {
         switch weatherCode {
@@ -82,6 +83,7 @@ struct HourlyWeather {
     let time: String
     let weatherCode: Int
     let temperature: Double
+    let precipitationChance: Int
     
     func conditionImageName() -> String {
         switch weatherCode {
@@ -103,6 +105,7 @@ struct HourlyForecastResponse: Codable {
         let time: [String]
         let temperature_2m: [Double]
         let weathercode: [Int]
+        let precipitation_probability: [Int]
     }
     let hourly: Hourly
 }

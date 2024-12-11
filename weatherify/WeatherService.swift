@@ -44,7 +44,7 @@ class WeatherService {
         }.resume()
     }
 
-    func fetchWeather(for coordinates: (Double, Double), completion: @escaping (Weather?) -> Void) {
+    func fetchDailyWeather(for coordinates: (Double, Double), completion: @escaping (Weather?) -> Void) {
         let (lat, lon) = coordinates
         let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&current_weather=true&daily=temperature_2m_max,temperature_2m_min"
         
@@ -101,9 +101,9 @@ class WeatherService {
         }
     }
     
-    func fetchFiveDayForecast(for coordinates: (Double, Double), completion: @escaping ([WeatherDay]?) -> Void) {
+    func fetchWeeklyForecast(for coordinates: (Double, Double), completion: @escaping ([WeatherDay]?) -> Void) {
         let (lat, lon) = coordinates
-        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto"
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=auto"
         
         guard let url = URL(string: urlString) else {
             print("Invalid URL for weather API")
@@ -132,7 +132,8 @@ class WeatherService {
                         dayOfWeek: self.dayOfWeek(from: date),
                         weatherCode: code,
                         maxTemperature: decodedResponse.daily.temperature_2m_max[index],
-                        minTemperature: decodedResponse.daily.temperature_2m_min[index]
+                        minTemperature: decodedResponse.daily.temperature_2m_min[index],
+                        precipitationChance: decodedResponse.daily.precipitation_probability_max[index]
                     )
                 }
                 completion(weatherDays)
@@ -145,7 +146,7 @@ class WeatherService {
     
     func fetchHourlyWeather(for coordinates: (Double, Double), completion: @escaping ([HourlyWeather]?) -> Void) {
         let (lat, lon) = coordinates
-        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&hourly=temperature_2m,weathercode&timezone=auto"
+        let urlString = "https://api.open-meteo.com/v1/forecast?latitude=\(lat)&longitude=\(lon)&hourly=temperature_2m,weathercode,precipitation_probability&timezone=auto"
         
         guard let url = URL(string: urlString) else {
             print("Invalid URL for hourly weather API")
@@ -169,17 +170,21 @@ class WeatherService {
             do {
                 let decodedResponse = try JSONDecoder().decode(HourlyForecastResponse.self, from: data)
                 
-                let hourlyWeather = zip(decodedResponse.hourly.time, decodedResponse.hourly.weathercode)
-                    .enumerated()
-                    .prefix(24) // Limit to 24 hours
-                    .map { index, element in
-                        let (time, code) = element
-                        return HourlyWeather(
-                            time: self.hourOfDay(from: time),
-                            weatherCode: code,
-                            temperature: decodedResponse.hourly.temperature_2m[index]
-                        )
-                    }
+                let hourlyWeather = zip(
+                    zip(decodedResponse.hourly.time, decodedResponse.hourly.weathercode),
+                    decodedResponse.hourly.precipitation_probability
+                )
+                .enumerated()
+                .prefix(24) // Limit to 24 hours
+                .map { index, element in
+                    let ((time, code), precipitation) = element
+                    return HourlyWeather(
+                        time: self.hourOfDay(from: time),
+                        weatherCode: code,
+                        temperature: decodedResponse.hourly.temperature_2m[index],
+                        precipitationChance: precipitation
+                    )
+                }
                 
                 completion(hourlyWeather)
             } catch {
