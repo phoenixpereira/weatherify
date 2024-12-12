@@ -12,6 +12,7 @@ import CoreLocationUI
 class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var weather: Weather?
     @Published var cityName: String = "Adelaide" // Default city
+    @Published var iso2: String = "AU"
     @Published var cityTimezone: String? // To hold the timezone of the city
     @Published var availableCities: [City] = []
     @Published var filteredCities: [City] = []
@@ -43,7 +44,14 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func fetchWeather() {
-        weatherService.fetchCoordinates(for: cityName) { [weak self] coordinates in
+        guard let city = allCities.first(where: {
+                $0.name.lowercased() == cityName.lowercased() && $0.iso2.lowercased() == iso2.lowercased()
+            }) else {
+                print("City not found in the list.")
+                return
+            }
+
+        weatherService.fetchCoordinates(for: city.name, iso2: city.iso2) { [weak self] coordinates in
             guard let coordinates = coordinates else {
                 print("Failed to fetch coordinates.")
                 return
@@ -120,6 +128,7 @@ class WeatherViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
             if let placemark = placemarks?.first {
                 DispatchQueue.main.async {
                     self?.cityName = placemark.locality ?? "Unknown"
+                    self?.iso2 = placemark.isoCountryCode ?? "Unknown"
                     self?.cityTimezone = placemark.timeZone?.identifier
                     self?.fetchWeather()
                 }

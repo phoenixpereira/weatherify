@@ -8,11 +8,11 @@
 import Foundation
 
 class WeatherService {
-    func fetchCoordinates(for city: String, completion: @escaping ((Double, Double)?) -> Void) {
-        let urlString = "https://geocoding-api.open-meteo.com/v1/search?name=\(city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+    func fetchCoordinates(for city: String, iso2: String, completion: @escaping ((Double, Double)?) -> Void) {
+        let urlString = "https://geocoding-api.open-meteo.com/v1/search?name=\(city.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&country_code=\(iso2)"
         
         guard let url = URL(string: urlString) else {
-            print("Invalid URL for city: \(city)")
+            print("Invalid URL for city: \(city) and country code: \(iso2)")
             completion(nil)
             return
         }
@@ -32,9 +32,11 @@ class WeatherService {
             
             do {
                 let decodedResponse = try JSONDecoder().decode(GeocodingResponse.self, from: data)
-                if let result = decodedResponse.results.first {
+                
+                if let result = decodedResponse.results.first(where: { $0.name.lowercased() == city.lowercased() && $0.country_code.lowercased() == iso2.lowercased() }) {
                     completion((result.latitude, result.longitude))
                 } else {
+                    print("No matching city found.")
                     completion(nil)
                 }
             } catch {

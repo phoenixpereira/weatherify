@@ -46,15 +46,21 @@ struct Searchbox: View {
                     VStack(alignment: .leading, spacing: 0) {
                         List(weatherViewModel.filteredCities, id: \.id) { city in
                             HStack {
-                                Text(city.name)
-                                    .foregroundColor(.primary)
-                                    .onTapGesture {
-                                        weatherViewModel.cityName = city.name
-                                        weatherViewModel.fetchWeather()
-                                        searchQuery = "" // Clear the search query
-                                    }
+                                VStack(alignment: .leading) {
+                                    Text(city.name)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                    Text(city.iso2)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .onTapGesture {
+                                    weatherViewModel.cityName = city.name
+                                    weatherViewModel.iso2 = city.iso2
+                                    weatherViewModel.fetchWeather()
+                                    searchQuery = "" // Clear the search query
+                                }
                             }
-                            
                             .listRowBackground(Color.clear)
                         }
                         .listStyle(.plain)
