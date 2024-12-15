@@ -89,6 +89,7 @@ extension Weather {
         case "Clear sky": return isNight ? "moon.stars.fill" : "sun.max.fill"
         case "Partly cloudy": return isNight ? "cloud.moon.fill" : "cloud.sun.fill"
         case "Rainy": return "cloud.rain.fill"
+        case "Rain showers": return "cloud.rain.fill"
         case "Snowy": return "snow"
         case "Thunderstorm": return "cloud.bolt.fill"
         default: return isNight ? "cloud.moon.fill" : "cloud.sun.fill"
